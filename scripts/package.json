@@ -1,0 +1,20 @@
+{
+  "name": "cheatsheeter-scripts",
+  "version": "1.0.0",
+  "description": "Migration scripts for CheatSheeter",
+  "scripts": {
+    "migrate": "tsx migrate-from-html.ts"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
+    "dotenv": "^16.3.1",
+    "pg": "^8.11.3",
+    "tsx": "^4.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "@types/pg": "^8.10.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

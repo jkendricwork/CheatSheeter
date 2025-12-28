@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git & GitHub Cheat Sheet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 15px;
+            font-size: 11px;
+            line-height: 1.3;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 24px;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 8px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .section {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid #3498db;
+        }
+        .section h2 {
+            color: #2c3e50;
+            font-size: 13px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 8px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 10px;
+            margin: 6px 0;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .code-block:hover {
+            background: #3d3d3d;
+        }
+        .code-block:active {
+            background: #4d4d4d;
+        }
+        .code-line {
+            margin: 3px 0;
+            white-space: nowrap;
+            overflow-x: auto;
+        }
+        .command {
+            color: #a6e22e;
+        }
+        .comment {
+            color: #75715e;
+        }
+        .best-practices {
+            grid-column: 1 / -1;
+            background: #fff3cd;
+            border-left-color: #ffc107;
+        }
+        .best-practices ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .best-practices li {
+            padding: 3px 0;
+            padding-left: 15px;
+            position: relative;
+        }
+        .best-practices li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #ffc107;
+            font-weight: bold;
+        }
+        .warning {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+        }
+        .copy-hint {
+            font-size: 9px;
+            color: #75715e;
+            font-style: italic;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GIT & GITHUB QUICK REFERENCE</h1>
+        
+        <div class="grid">
+            <!-- Initial Setup -->
+            <div class="section">
+                <h2>INITIAL SETUP</h2>
+                <div class="code-block" onclick="copyCode(this)">
+                    <div class="code-line"><span class="comment"># Create repo on GitHub first</span></div>
+                    <div class="code-line"><span class="command">cd</span> /path/to/project</div>
+                    <div class="code-line"><span class="command">git init</span></div>
+                    <div class="code-line"><span class="command">git config --global user.name</span> "jkendricwork"</div>
+                    <div class="code-line"><span class="command">git config --global user.email</span> "jeremy.kendrick@hsc.utah.edu"</div>
+                </div>
+            </div>
+
+            <!-- GitHub CLI -->
+            <div class="section">
+                <h2>CREATE REPO (GH CLI)</h2>
+                <div class="code-block" onclick="copyCode(this)">
+                    <div class="code-line"><span class="comment"># First time: authenticate</span></div>
+                    <div class="code-line"><span class="command">gh auth login</span></div>
+                </div>
+                <div class="code-block" onclick="copyCode(this)">
+                    <div class="code-line"><span class="comment"># Create repo from current folder</span></div>
+                    <div class="code-line"><span class="command">gh repo create</span> --public --source=. --remote=origin</div>
+                </div>
+                <div class="code-block" onclick="copyCode(this)">
+                    <div class="code-line"><span class="comment"># Or create + push in one command</span></div>
+                    <div class="code-line"><span class="command">gh repo create</span> repo-name --public --source=. --push</div>
+                </div>
+                <div class="code-block" onclick="copyCode(this)">
+                    <div class="code-line"><span class="comment"># Create private repo</span></div>
+                    <div class="code-line"><span class="command">gh repo create</span> repo-name --private --source=. --push</div>
+                </div>
+            </div>
+
+            <!-- Basic Workflow -->
+            <div class="section">
+                <h2>BASIC WORKFLOW</h2>
+                <div class="code-block" onclick="copyCode(this)">
+                    <div class="code-line"><span class="command">git add .</span> <span class="comment"># Stage all</span></div>
+                    <div class="code-line"><span class="command">git add</span> file.txt <span class="comment"># Stage specific</span></div>
+                    <div class="code-line"><span class="command">git commit -m</span> "Message"</div>
+                </div>
+                <div class="code-block" onclick="copyCode(this)">
+                    <div class="code-line"><span class="comment"># First push</span></div>
+                    <div class="code-line"><span class="command">git remote add origin</span> https://github.com/user/repo.git</div>
+                    <div class="code-line"><span class="command">git branch -M</span> main</div>
+                    <div class="code-line"><span class="command">git push -u origin</span> main</div>
+                </div>
+                <div class="code-block" onclick="copyCode(this)">
+                    <div class="code-line"><span class="command">git push</span> <span class="comment"># Subsequent pushes</span></div>
+                </div>
+            </div>
+
+            <!-- Common Commands -->
+            <div class="section">
+                <h2>COMMON COMMANDS</h2>
+                <div class="code-block" onclick="copyCode(this)">
+                    <div class="code-line"><span class="command">git status</span></div>
+                    <div class="code-line"><span class="command">git log --oneline</span></div>
+                    <div class="code-line"><span class="command">git diff</span></div>
+                    <div class="code-line"><span class="command">git pull</span></div>
+                    <div class="code-line"><span class="command">git clone</span> https://github.com/user/repo.git</div>
+                </div>
+            </div>
+
+            <!-- List Commits -->
+            <div class="section">
+                <h2>LIST COMMITS</h2>
+                <div class="code-block" onclick="copyCode(this)">
+                    <div class="code-line"><span class="command">git log</span> <span class="comment"># Full history</span></div>
+                    <div class="code-line"><span class="command">git log --oneline</span> <span class="comment"># Compact</span></div>
+                    <div class="code-line"><span class="command">git log --graph --oneline</span> <span class="comment"># Visual</span></div>
+                    <div class="code-line"><span class="command">git log -n 10</span> <span class="comment"># Last 10</span></div>
+                    <div class="code-line"><span class="command">git log --author=</span>"jkendricwork"</div>
+                    <div class="code-line"><span class="command">git log --since=</span>"2 weeks ago"</div>
+                </div>
+            </div>
+
+            <!-- Branching -->
+            <div class="section">
+                <h2>BRANCHING</h2>
+                <div class="code-block" onclick="copyCode(this)">
+                    <div class="code-line"><span class="command">git branch</span> feature-name</div>
+                    <div class="code-line"><span class="command">git checkout</span> feature-name</div>
+                    <div class="code-line"><span class="command">git checkout -b</span> feature-name</div>
+                    <div class="code-line"><span class="command">git merge</span> feature-name</div>
+                    <div class="code-line"><span class="command">git branch -d</span> feature-name</div>
+                </div>
+            </div>
+
+            <!-- Undo Changes -->
+            <div class="section">
+                <h2>UNDO CHANGES</h2>
+                <div class="code-block" onclick="copyCode(this)">
+                    <div class="code-line"><span class="command">git restore</span> file.txt <span class="comment"># Discard changes</span></div>
+                    <div class="code-line"><span class="command">git restore --staged</span> file.txt</div>
+                    <div class="code-line"><span class="command">git reset --soft HEAD~1</span> <span class="comment"># Keep changes</span></div>
+                    <div class="code-line"><span class="command">git reset --hard HEAD~1</span> <span class="comment"># Discard all</span></div>
+                </div>
+            </div>
+
+            <!-- Restore Specific Commit -->
+            <div class="section">
+                <h2>RESTORE TO COMMIT</h2>
+                <div class="code-block" onclick="copyCode(this)">
+                    <div class="code-line"><span class="command">git log --oneline</span> <span class="comment"># Find hash</span></div>
+                    <div class="code-line"><span class="command">git checkout</span> a1b2c3d <span class="comment"># View old</span></div>
+                    <div class="code-line"><span class="command">git checkout</span> main <span class="comment"># Return</span></div>
+                </div>
+                <div class="code-block" onclick="copyCode(this)">
+                    <div class="code-line"><span class="comment"># Restore file from commit</span></div>
+                    <div class="code-line"><span class="command">git checkout</span> a1b2c3d -- file.txt</div>
+                </div>
+            </div>
+
+            <!-- Reset to Specific Commit -->
+            <div class="section">
+                <h2>RESET TO COMMIT</h2>
+                <div class="code-block" onclick="copyCode(this)">
+                    <div class="code-line"><span class="comment"># Soft reset (keep changes staged)</span></div>
+                    <div class="code-line"><span class="command">git reset --soft</span> a1b2c3d</div>
+                </div>
+                <div class="code-block" onclick="copyCode(this)">
+                    <div class="code-line"><span class="comment"># Mixed reset (keep changes unstaged)</span></div>
+                    <div class="code-line"><span class="command">git reset --mixed</span> a1b2c3d</div>
+                </div>
+                <div class="code-block" onclick="copyCode(this)">
+                    <div class="code-line"><span class="comment"># Hard reset (discard all changes)</span></div>
+                    <div class="code-line"><span class="command">git reset --hard</span> a1b2c3d</div>
+                    <div class="code-line"><span class="command">git push --force</span> <span class="comment"># If already pushed</span></div>
+                </div>
+                <div class="code-block" onclick="copyCode(this)">
+                    <div class="code-line"><span class="comment"># Revert (safer - new commit)</span></div>
+                    <div class="code-line"><span class="command">git revert</span> a1b2c3d</div>
+                    <div class="code-line"><span class="command">git revert HEAD~3..HEAD</span> <span class="comment"># Last 3</span></div>
+                </div>
+            </div>
+
+            <!-- .gitignore Setup -->
+            <div class="section">
+                <h2>.GITIGNORE SETUP</h2>
+                <div class="code-block" onclick="copyCode(this)">
+                    <div class="code-line"><span class="command">echo</span> "node_modules/" > .gitignore</div>
+                    <div class="code-line"><span class="command">echo</span> "*.log" >> .gitignore</div>
+                    <div class="code-line"><span class="command">echo</span> ".env" >> .gitignore</div>
+                    <div class="code-line"><span class="command">echo</span> "__pycache__/" >> .gitignore</div>
+                    <div class="code-line"><span class="command">git add</span> .gitignore</div>
+                </div>
+            </div>
+
+            <!-- View File History -->
+            <div class="section">
+                <h2>FILE HISTORY</h2>
+                <div class="code-block" onclick="copyCode(this)">
+                    <div class="code-line"><span class="command">git log --</span> file.txt</div>
+                    <div class="code-line"><span class="command">git log -p</span> file.txt <span class="comment"># With diffs</span></div>
+                    <div class="code-line"><span class="command">git blame</span> file.txt <span class="comment"># Line by line</span></div>
+                </div>
+            </div>
+
+            <!-- Stash Changes -->
+            <div class="section">
+                <h2>STASH (TEMPORARY SAVE)</h2>
+                <div class="code-block" onclick="copyCode(this)">
+                    <div class="code-line"><span class="command">git stash</span> <span class="comment"># Save changes</span></div>
+                    <div class="code-line"><span class="command">git stash list</span></div>
+                    <div class="code-line"><span class="command">git stash pop</span> <span class="comment"># Restore latest</span></div>
+                    <div class="code-line"><span class="command">git stash apply</span> stash@{0}</div>
+                    <div class="code-line"><span class="command">git stash drop</span></div>
+                </div>
+            </div>
+
+            <!-- Best Practices -->
+            <div class="section best-practices">
+                <h2>BEST PRACTICES</h2>
+                <ul>
+                    <li><strong>Commits:</strong> Small, logical changes with clear messages (present tense: "Add feature" not "Added")</li>
+                    <li><strong>Before Push:</strong> Always pull first to avoid conflicts</li>
+                    <li><strong>Branches:</strong> Use for features/experiments, keep main stable</li>
+                    <li><strong>Security:</strong> Never commit passwords, API keys, or sensitive data</li>
+                    <li><strong>Collaboration:</strong> Use pull requests, delete merged branches</li>
+                    <li><strong>Regular Sync:</strong> Pull frequently from remote</li>
+                </ul>
+            </div>
+
+            <!-- Safety Tips -->
+            <div class="section warning">
+                <h2>⚠️ SAFETY TIPS</h2>
+                <ul>
+                    <li>Use <strong>git revert</strong> instead of <strong>reset</strong> for published commits</li>
+                    <li>Create backup before destructive ops: <strong>git branch backup</strong></li>
+                    <li>Never <strong>--force</strong> on shared branches without coordination</li>
+                    <li>Test in separate branch before resetting main</li>
+                </ul>
+            </div>
+        </div>
+
+        <p class="copy-hint" style="text-align: center; margin-top: 10px;">💡 Click any code block to copy to clipboard</p>
+    </div>
+
+    <script>
+        function copyCode(element) {
+            const lines = element.querySelectorAll('.code-line');
+            let text = '';
+            lines.forEach(line => {
+                text += line.textContent.trim() + '\n';
+            });
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const original = element.style.background;
+                element.style.background = '#27ae60';
+                setTimeout(() => {
+                    element.style.background = original;
+                }, 200);
+            }).catch(err => {
+                alert('Copy failed. Please select and copy manually.');
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm init:*)",
+      "Bash(chmod:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run migrate:*)",
+      "Bash(docker exec:*)",
+      "Bash(curl:*)",
+      "Bash(npm run dev:*)",
+      "Bash(docker ps:*)"
+    ]
+  }
+}

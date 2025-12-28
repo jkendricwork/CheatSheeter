@@ -1,0 +1,228 @@
+import * as fs from 'fs';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
+import * as cheerio from 'cheerio';
+import { Pool } from 'pg';
+import * as dotenv from 'dotenv';
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables from server directory
+dotenv.config({ path: path.join(__dirname, '../server/.env') });
+
+interface ParsedSection {
+  title: string;
+  styleVariant: 'default' | 'warning' | 'best-practices';
+  gridColumnSpan: number;
+  borderColor: string;
+  backgroundColor: string;
+  category: string;
+  codeBlocks: ParsedCodeBlock[];
+}
+
+interface ParsedCodeBlock {
+  content: string;
+  displayOrder: number;
+}
+
+async function parseHTML(): Promise<ParsedSection[]> {
+  const htmlPath = path.join(__dirname, '../index.html');
+  const html = fs.readFileSync(htmlPath, 'utf-8');
+  const $ = cheerio.load(html);
+
+  const sections: ParsedSection[] = [];
+  let displayOrder = 0;
+
+  $('.section').each((i, elem) => {
+    const $section = $(elem);
+    const title = $section.find('h2').text().trim();
+
+    // Detect style variant
+    let styleVariant: 'default' | 'warning' | 'best-practices' = 'default';
+    if ($section.hasClass('warning')) {
+      styleVariant = 'warning';
+    } else if ($section.hasClass('best-practices')) {
+      styleVariant = 'best-practices';
+    }
+
+    // Detect grid span
+    const gridColumnSpan = $section.hasClass('best-practices') ? 3 : 1;
+
+    // Set colors based on variant
+    let borderColor = '#3498db';
+    let backgroundColor = '#f8f9fa';
+    if (styleVariant === 'warning') {
+      borderColor = '#dc3545';
+      backgroundColor = '#f8d7da';
+    } else if (styleVariant === 'best-practices') {
+      borderColor = '#ffc107';
+      backgroundColor = '#fff3cd';
+    }
+
+    // Categorize sections
+    const category = categorizeSection(title);
+
+    // Extract code blocks
+    const codeBlocks: ParsedCodeBlock[] = [];
+
+    // Check if this is a list-based section (best practices, safety tips)
+    if ($section.find('ul').length > 0) {
+      // Handle list items as code blocks
+      $section.find('ul li').each((j, liElem) => {
+        const text = $(liElem).text().trim();
+        if (text) {
+          codeBlocks.push({
+            content: text,
+            displayOrder: j,
+          });
+        }
+      });
+    } else {
+      // Handle regular code blocks
+      $section.find('.code-block').each((j, codeElem) => {
+        const lines: string[] = [];
+        $(codeElem).find('.code-line').each((k, line) => {
+          // Get text content, preserving structure
+          const lineText = $(line).text().trim();
+          if (lineText) {
+            lines.push(lineText);
+          }
+        });
+
+        if (lines.length > 0) {
+          codeBlocks.push({
+            content: lines.join('\n'),
+            displayOrder: j,
+          });
+        }
+      });
+    }
+
+    sections.push({
+      title,
+      styleVariant,
+      gridColumnSpan,
+      borderColor,
+      backgroundColor,
+      category,
+      codeBlocks,
+    });
+
+    displayOrder++;
+  });
+
+  return sections;
+}
+
+function categorizeSection(title: string): string {
+  const titleLower = title.toLowerCase();
+
+  if (titleLower.includes('setup') || titleLower.includes('config')) {
+    return 'setup';
+  } else if (titleLower.includes('workflow') || titleLower.includes('common')) {
+    return 'workflow';
+  } else if (titleLower.includes('branch')) {
+    return 'branching';
+  } else if (titleLower.includes('commit') || titleLower.includes('history') || titleLower.includes('file history')) {
+    return 'history';
+  } else if (titleLower.includes('undo') || titleLower.includes('reset') || titleLower.includes('restore')) {
+    return 'undo';
+  } else if (titleLower.includes('stash')) {
+    return 'stash';
+  } else if (titleLower.includes('gitignore')) {
+    return 'config';
+  } else if (titleLower.includes('best practices')) {
+    return 'best-practices';
+  } else if (titleLower.includes('safety') || titleLower.includes('warning')) {
+    return 'safety';
+  } else if (titleLower.includes('repo') || titleLower.includes('create')) {
+    return 'setup';
+  }
+
+  return 'general';
+}
+
+async function seedDatabase(sections: ParsedSection[]) {
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+  });
+
+  try {
+    console.log('🔌 Connecting to database...');
+    await pool.query('SELECT NOW()');
+    console.log('✓ Database connected\n');
+
+    console.log('🗑️  Clearing existing data...');
+    await pool.query('DELETE FROM code_blocks');
+    await pool.query('DELETE FROM sections');
+    console.log('✓ Existing data cleared\n');
+
+    console.log('📝 Inserting sections and code blocks...\n');
+
+    for (let i = 0; i < sections.length; i++) {
+      const section = sections[i];
+
+      // Insert section
+      const sectionResult = await pool.query(
+        `INSERT INTO sections
+         (title, display_order, grid_column_span, style_variant, border_color, background_color, category)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING id`,
+        [
+          section.title,
+          i,
+          section.gridColumnSpan,
+          section.styleVariant,
+          section.borderColor,
+          section.backgroundColor,
+          section.category,
+        ]
+      );
+
+      const sectionId = sectionResult.rows[0].id;
+      console.log(`  ✓ Section ${i + 1}/${sections.length}: ${section.title} (${section.codeBlocks.length} blocks)`);
+
+      // Insert code blocks
+      for (const codeBlock of section.codeBlocks) {
+        await pool.query(
+          `INSERT INTO code_blocks (section_id, content, display_order, language, is_clickable)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [
+            sectionId,
+            codeBlock.content,
+            codeBlock.displayOrder,
+            section.styleVariant === 'best-practices' ? 'text' : 'bash',
+            true,
+          ]
+        );
+      }
+    }
+
+    console.log('\n✅ Migration completed successfully!');
+    console.log(`   Migrated ${sections.length} sections with ${sections.reduce((sum, s) => sum + s.codeBlocks.length, 0)} code blocks`);
+  } catch (error) {
+    console.error('❌ Migration failed:', error);
+    throw error;
+  } finally {
+    await pool.end();
+  }
+}
+
+// Execute migration
+async function main() {
+  try {
+    console.log('🚀 Starting migration from index.html to PostgreSQL\n');
+
+    const sections = await parseHTML();
+    console.log(`📄 Parsed ${sections.length} sections from HTML\n`);
+
+    await seedDatabase(sections);
+  } catch (error) {
+    console.error('Fatal error:', error);
+    process.exit(1);
+  }
+}
+
+main();
