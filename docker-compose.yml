@@ -1,6 +1,5 @@
-version: '3.8'
-
 services:
+  # PostgreSQL Database
   postgres:
     image: postgres:14-alpine
     container_name: cheatsheeter-db
@@ -13,6 +12,53 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./server/src/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cheatsheeter-network
+
+  # Backend API Server
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: cheatsheeter-backend
+    environment:
+      PORT: 3001
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/cheatsheeter
+      CORS_ORIGIN: http://localhost:3000
+      NODE_ENV: production
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - cheatsheeter-network
+    restart: unless-stopped
+
+  # Frontend Client
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:3001
+    container_name: cheatsheeter-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - cheatsheeter-network
+    restart: unless-stopped
 
 volumes:
   postgres_data:
+
+networks:
+  cheatsheeter-network:
+    driver: bridge

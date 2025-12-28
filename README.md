@@ -34,11 +34,66 @@ CheatSheeter/
 
 ## Prerequisites
 
-- Node.js 18+ and npm
-- Docker and Docker Compose (recommended for database)
+- **Option 1 (Docker - Recommended)**: Docker and Docker Compose
+- **Option 2 (Local Development)**: Node.js 18+ and npm
 - Git
 
-## Quick Start
+## Quick Start with Docker (Recommended)
+
+**📖 See [DOCKER.md](DOCKER.md) for complete Docker documentation and commands.**
+
+### Run the Entire Application in Docker
+
+```bash
+# Build and start all services (database, backend, frontend)
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+```
+
+The application will be available at:
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:3001
+- **Database**: localhost:5432
+
+**Note**: The frontend runs on port 3000 (via nginx) in Docker, vs port 5173 (Vite dev server) in local development.
+
+### Docker Commands
+
+```bash
+# Rebuild containers after code changes
+docker-compose up -d --build
+
+# Stop and remove all containers, networks, and volumes
+docker-compose down -v
+
+# View logs for a specific service
+docker-compose logs -f frontend
+docker-compose logs -f backend
+docker-compose logs -f postgres
+
+# Access a running container
+docker exec -it cheatsheeter-backend sh
+docker exec -it cheatsheeter-frontend sh
+docker exec -it cheatsheeter-db psql -U postgres -d cheatsheeter
+
+# Run database migrations (if using scripts)
+docker exec -it cheatsheeter-db psql -U postgres -d cheatsheeter -f /docker-entrypoint-initdb.d/schema.sql
+```
+
+### Notes on Docker Setup
+
+- The database schema is automatically initialized on first run
+- All data is persisted in a Docker volume named `postgres_data`
+- The frontend is built as a static site and served by nginx
+- The backend runs in production mode inside the container
+- All services are connected via a Docker network for inter-service communication
+
+## Quick Start for Local Development
 
 ### 1. Install Dependencies
 
