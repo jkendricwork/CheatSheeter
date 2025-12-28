@@ -16,8 +16,10 @@ interface Props {
 }
 
 export const SectionCard: React.FC<Props> = ({ section }) => {
-  const { isEditMode } = useUIStore();
+  const { isEditMode, collapsedSections, toggleSectionCollapse } = useUIStore();
   const queryClient = useQueryClient();
+
+  const isCollapsed = collapsedSections.has(section.id);
 
   const [editSectionModal, setEditSectionModal] = useState(false);
   const [editSubsectionId, setEditSubsectionId] = useState<number | null>(null);
@@ -102,21 +104,27 @@ export const SectionCard: React.FC<Props> = ({ section }) => {
     >
       {/* Section Header */}
       <div
-        className="px-4 py-3 border-b-2"
+        className="px-4 py-3 border-b-2 cursor-pointer hover:opacity-80 transition-opacity"
         style={{
           backgroundColor: getBorderColor() + '15', // Add transparency
           borderBottomColor: getBorderColor(),
         }}
+        onClick={() => toggleSectionCollapse(section.id)}
       >
         <div className="flex justify-between items-center">
-          <h2
-            className="text-base font-bold uppercase tracking-wide"
-            style={{ color: getBorderColor() }}
-          >
-            {section.title}
-          </h2>
+          <div className="flex items-center gap-2">
+            <span className="text-sm" style={{ color: getBorderColor() }}>
+              {isCollapsed ? '▶' : '▼'}
+            </span>
+            <h2
+              className="text-base font-bold uppercase tracking-wide"
+              style={{ color: getBorderColor() }}
+            >
+              {section.title}
+            </h2>
+          </div>
           {isEditMode && (
-            <div className="flex gap-2">
+            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
               <button
                 onClick={() => setEditSectionModal(true)}
                 className="text-blue-600 hover:text-blue-800 text-xs font-medium px-2 py-1 rounded hover:bg-blue-50"
@@ -138,15 +146,17 @@ export const SectionCard: React.FC<Props> = ({ section }) => {
       </div>
 
       {/* Section Content - Subsections Grid */}
-      <div
-        className="p-4"
-        style={{ backgroundColor: getBackgroundColor() }}
-      >
-        {section.subsections && section.subsections.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {section.subsections.map((subsection) => (
+      {!isCollapsed && (
+        <div
+          className="p-4"
+          style={{ backgroundColor: getBackgroundColor() }}
+        >
+          {section.subsections && section.subsections.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {section.subsections.map((subsection) => (
               <div
                 key={subsection.id}
+                id={`subsection-${subsection.id}`}
                 className="space-y-2 p-3 bg-white rounded-md border border-gray-200 shadow-sm"
               >
                 {/* Subsection Title */}
@@ -239,15 +249,16 @@ export const SectionCard: React.FC<Props> = ({ section }) => {
               </div>
             ))}
           </div>
-        ) : (
-          <div className="text-center text-gray-400 text-sm py-4">
-            No subsections in this section
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="text-center text-gray-400 text-sm py-4">
+              No subsections in this section
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Add New Subsection Form */}
-      {isEditMode && addSubsectionModal && (
+      {!isCollapsed && isEditMode && addSubsectionModal && (
         <div className="px-4 py-3 border-t border-gray-200 bg-green-50">
           <SubsectionForm
             sectionId={section.id}
@@ -258,7 +269,7 @@ export const SectionCard: React.FC<Props> = ({ section }) => {
       )}
 
       {/* Add New Subsection Button (Edit Mode) */}
-      {isEditMode && !addSubsectionModal && (
+      {!isCollapsed && isEditMode && !addSubsectionModal && (
         <div className="px-4 py-2 border-t border-gray-200 bg-gray-50">
           <button
             onClick={() => setAddSubsectionModal(true)}

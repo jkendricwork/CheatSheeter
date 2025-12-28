@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSections } from '../hooks/useSections';
 import { SectionCard } from '../components/sections/SectionCard';
 import { useUIStore } from '../stores/uiStore';
@@ -9,9 +9,18 @@ import { useQueryClient } from '@tanstack/react-query';
 
 export const HomePage: React.FC = () => {
   const { data: sections = [], isLoading, error } = useSections();
-  const { isEditMode } = useUIStore();
+  const { isEditMode, collapseSection } = useUIStore();
   const queryClient = useQueryClient();
   const [showAddModal, setShowAddModal] = useState(false);
+
+  // Collapse all sections by default when they first load
+  useEffect(() => {
+    if (sections.length > 0) {
+      sections.forEach(section => {
+        collapseSection(section.id);
+      });
+    }
+  }, [sections.length]); // Only run when number of sections changes
 
   const handleAddSection = async (data: any) => {
     await sectionsApi.create(data);
