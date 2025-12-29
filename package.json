@@ -6,13 +6,10 @@
   "scripts": {
     "start": "./start.sh",
     "stop": "./stop.sh",
-    "start:docker": "./start-docker.sh",
-    "stop:docker": "./stop-docker.sh",
+    "status": "./status.sh",
     "dev": "concurrently --names \"CLIENT,SERVER\" --prefix-colors \"cyan,green\" \"npm run dev:client\" \"npm run dev:server\"",
     "dev:client": "cd client && npm run dev",
     "dev:server": "cd server && npm run dev",
-    "dev:db": "docker-compose up -d database",
-    "docker:logs": "docker-compose logs -f",
     "build": "npm run build:client && npm run build:server",
     "build:client": "cd client && npm run build",
     "build:server": "cd server && npm run build"

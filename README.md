@@ -21,13 +21,76 @@ A full-stack web application for creating, editing, and managing custom cheat sh
 
 ## Prerequisites
 
-- **Docker Desktop** (for running PostgreSQL database)
+- **Homebrew** (for macOS)
 - **Node.js 18+** and npm
-- Git
+- **PostgreSQL 14** (automatically installed via setup script)
 
 ## Quick Start
 
-### 1. Install Dependencies
+### First Time Setup
+
+Run the automated setup script:
+
+```bash
+./setup.sh
+```
+
+This will:
+1. Install PostgreSQL 14 via Homebrew (if not installed)
+2. Start PostgreSQL service
+3. Create the `cheatsheeter` database
+4. Load the database schema
+5. Install all npm dependencies
+6. Create `.env` files from examples
+
+### Start the Application
+
+```bash
+npm start
+```
+
+This will:
+1. Ensure PostgreSQL is running
+2. Start backend server on port 3001
+3. Start frontend dev server on port 5173
+
+**Access at:**
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:3001
+- API Health: http://localhost:3001/health
+
+### Stop the Application
+
+```bash
+npm stop
+```
+
+This will stop the frontend and backend servers. PostgreSQL will continue running in the background.
+
+To stop PostgreSQL:
+```bash
+brew services stop postgresql@14
+```
+
+## Manual Setup
+
+If you prefer to set up manually:
+
+### 1. Install PostgreSQL
+
+```bash
+brew install postgresql@14
+brew services start postgresql@14
+```
+
+### 2. Create Database
+
+```bash
+createdb cheatsheeter
+psql -d cheatsheeter -f server/src/db/schema.sql
+```
+
+### 3. Install Dependencies
 
 ```bash
 npm install
@@ -35,134 +98,106 @@ cd server && npm install && cd ..
 cd client && npm install && cd ..
 ```
 
-### 2. Start the Application
+### 4. Configure Environment
 
-#### Local Development Mode (Recommended)
-Runs PostgreSQL in Docker, frontend and backend on your local machine with hot reload:
+Create `server/.env`:
+```bash
+PORT=3001
+DATABASE_URL=postgresql://localhost:5432/cheatsheeter
+CORS_ORIGIN=http://localhost:5173
+NODE_ENV=development
+```
+
+Create `client/.env`:
+```bash
+VITE_API_URL=http://localhost:3001
+```
+
+### 5. Start the Application
 
 ```bash
 npm start
-```
-
-This will:
-1. Start PostgreSQL in Docker
-2. Wait for database to be ready
-3. Start backend server on port 3001
-4. Start frontend dev server on port 5173
-
-**Access at:**
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:3001
-- API Health: http://localhost:3001/health
-
-#### Full Docker Mode
-Runs everything in Docker containers (all services containerized):
-
-```bash
-npm run start:docker
-```
-
-**Access at:**
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:3001
-
-### 3. Stop the Application
-
-```bash
-# For local development mode
-npm stop
-
-# For full Docker mode
-npm run stop:docker
-```
-
-## Auto-Start on Boot (macOS)
-
-To automatically start CheatSheeter when your Mac boots:
-
-```bash
-./auto-start.sh enable
-```
-
-This will start the application in full Docker mode every time you log in.
-
-**📖 See [AUTO_START.md](AUTO_START.md) for complete auto-start documentation.**
-
-To disable auto-start:
-
-```bash
-./auto-start.sh disable
 ```
 
 ## LAN Access (Access from Other Devices)
 
 To access CheatSheeter from other devices on your local network:
 
-### Local Development Mode
+### 1. Find your machine's IP address
 
-1. Find your machine's IP address:
-   ```bash
-   # macOS/Linux
-   ipconfig getifaddr en0
-   # or use: ifconfig
-   ```
+```bash
+# macOS/Linux
+ipconfig getifaddr en0
+# or use: ifconfig
+```
 
-2. Update `client/.env`:
-   ```bash
-   VITE_API_URL=http://YOUR_IP:3001
-   # Example: VITE_API_URL=http://192.168.1.70:3001
-   ```
+### 2. Update Environment Files
 
-3. Update `server/.env`:
-   ```bash
-   CORS_ORIGIN=http://localhost:5173,http://YOUR_IP:5173
-   # Example: CORS_ORIGIN=http://localhost:5173,http://192.168.1.70:5173
-   ```
+**Update `client/.env`:**
+```bash
+VITE_API_URL=http://YOUR_IP:3001
+# Example: VITE_API_URL=http://192.168.1.70:3001
+```
 
-4. Restart the application:
-   ```bash
-   npm stop
-   npm start
-   ```
+**Update `server/.env`:**
+```bash
+CORS_ORIGIN=http://localhost:5173,http://YOUR_IP:5173
+# Example: CORS_ORIGIN=http://localhost:5173,http://192.168.1.70:5173
+```
 
-5. Access from other devices at: `http://YOUR_IP:5173`
+### 3. Restart the Application
 
-### Full Docker Mode
+```bash
+npm stop
+npm start
+```
 
-1. Update `docker-compose.yml` line 52:
-   ```yaml
-   VITE_API_URL: "http://YOUR_IP:3001"
-   ```
+### 4. Access from Other Devices
 
-2. Rebuild and restart:
-   ```bash
-   npm run stop:docker
-   npm run start:docker
-   ```
-
-3. Access from other devices at: `http://YOUR_IP:3000`
+Open `http://YOUR_IP:5173` on any device on your LAN.
 
 ## Available Commands
 
 ### Main Commands
-- `npm start` - Start in local development mode (database in Docker, servers local)
-- `npm stop` - Stop local development mode
-- `npm run start:docker` - Start everything in Docker
-- `npm run stop:docker` - Stop Docker mode
+- `npm start` - Start the application
+- `npm stop` - Stop the application
+- `./setup.sh` - First-time setup
 
 ### Development Commands
-- `npm run dev` - Start frontend and backend (assumes database is running)
+- `npm run dev` - Start frontend and backend (assumes PostgreSQL is running)
 - `npm run dev:client` - Start only the frontend
 - `npm run dev:server` - Start only the backend
-- `npm run dev:db` - Start only PostgreSQL in Docker
 
-### Utility Commands
-- `npm run docker:logs` - View Docker logs
+### Build Commands
 - `npm run build` - Build both frontend and backend for production
-- `./start.sh` - Direct shell script for local development mode
-- `./stop.sh` - Direct shell script to stop local development mode
-- `./start-docker.sh` - Direct shell script for full Docker mode
-- `./stop-docker.sh` - Direct shell script to stop Docker mode
+- `npm run build:client` - Build only the frontend
+- `npm run build:server` - Build only the backend
+
+## Database Management
+
+### Access Database
+
+```bash
+psql cheatsheeter
+```
+
+### Backup Database
+
+```bash
+pg_dump cheatsheeter > backup.sql
+```
+
+### Restore Database
+
+```bash
+psql cheatsheeter < backup.sql
+```
+
+### Reset Database
+
+```bash
+psql -d cheatsheeter -f server/src/db/schema.sql
+```
 
 ## API Endpoints
 
@@ -221,62 +256,79 @@ The application uses a 3-level hierarchy:
 - **Navigation Menu**: Categorized sidebar for easy section navigation
 - **LAN Access**: Access from any device on your local network
 
-## Docker Details
-
-### Container Names
-- `cheatsheeter-postgres` - PostgreSQL database
-- `cheatsheeter-backend` - Express API server
-- `cheatsheeter-frontend` - Nginx serving React app
-
-### Data Persistence
-All database data is persisted in a Docker volume named `postgres_data`. Data survives container restarts unless you explicitly run:
-```bash
-docker-compose down -v  # WARNING: Deletes all data!
-```
-
-### Port Mappings
-- **Local Development Mode**: Frontend on 5173, Backend on 3001, Database on 5432
-- **Full Docker Mode**: Frontend on 3000, Backend on 3001, Database on 5432
-
 ## Troubleshooting
 
 ### Port Already in Use
+
 If you get "port already in use" errors:
 ```bash
 # Kill processes on specific ports
 lsof -ti:3001 | xargs kill -9  # Backend
 lsof -ti:5173 | xargs kill -9  # Frontend
-lsof -ti:5432 | xargs kill -9  # Database
 ```
 
-### Docker Issues
+### PostgreSQL Issues
+
 ```bash
-# Check if Docker is running
-docker info
+# Check if PostgreSQL is running
+brew services list | grep postgresql
 
-# Start Docker Desktop on macOS
-open -a Docker
+# Start PostgreSQL
+brew services start postgresql@14
 
-# View container logs
-docker-compose logs -f
+# Stop PostgreSQL
+brew services stop postgresql@14
 
-# Clean up everything and start fresh
-npm run stop:docker
-docker-compose down -v
-npm run start:docker
+# Restart PostgreSQL
+brew services restart postgresql@14
+
+# View PostgreSQL logs
+tail -f /opt/homebrew/var/log/postgresql@14.log
 ```
 
 ### Database Connection Errors
-Make sure PostgreSQL is running:
-```bash
-docker ps | grep postgres
-```
+
+1. Check that PostgreSQL is running:
+   ```bash
+   pg_isready
+   ```
+
+2. Verify the database exists:
+   ```bash
+   psql -l | grep cheatsheeter
+   ```
+
+3. Check `server/.env` has correct DATABASE_URL:
+   ```bash
+   DATABASE_URL=postgresql://localhost:5432/cheatsheeter
+   ```
 
 ### Frontend Can't Connect to Backend
-1. Check that backend is running: `curl http://localhost:3001/health`
+
+1. Check that backend is running:
+   ```bash
+   curl http://localhost:3001/health
+   ```
+
 2. Verify CORS configuration in `server/.env`
+
 3. Check `client/.env` has correct `VITE_API_URL`
+
 4. Restart servers after changing `.env` files
+
+### Missing PostgreSQL Command
+
+If PostgreSQL commands aren't found, add to your PATH:
+
+```bash
+# Add to ~/.zshrc or ~/.bash_profile
+export PATH="/opt/homebrew/opt/postgresql@14/bin:$PATH"
+```
+
+Then restart your terminal or run:
+```bash
+source ~/.zshrc  # or ~/.bash_profile
+```
 
 ## License
 

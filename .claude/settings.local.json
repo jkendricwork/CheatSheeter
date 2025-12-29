@@ -47,7 +47,18 @@
       "Bash(break)",
       "Bash(npm run stop:docker:*)",
       "Bash(ls:*)",
-      "Bash(./auto-start.sh:*)"
+      "Bash(./auto-start.sh:*)",
+      "Bash(brew services start:*)",
+      "Bash(/opt/homebrew/opt/postgresql@14/bin/createdb cheatsheeter)",
+      "Bash(/opt/homebrew/opt/postgresql@14/bin/psql:*)",
+      "Bash(then echo \"Docker ready\")",
+      "Bash(./migrate-from-docker.sh)",
+      "Bash(psql:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill:*)",
+      "Bash(./start.sh:*)",
+      "Bash(./stop.sh)",
+      "Bash(./status.sh:*)"
     ]
   }
 }

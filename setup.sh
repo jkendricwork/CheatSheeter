@@ -3,30 +3,56 @@
 echo "🚀 CheatSheeter Setup Script"
 echo ""
 
-# Check if Docker is available
-if ! command -v docker &> /dev/null; then
-    echo "⚠️  Docker not found. Please install Docker Desktop."
+# Check if Homebrew is installed
+if ! command -v brew &> /dev/null; then
+    echo "⚠️  Homebrew not found. Please install Homebrew first."
     echo ""
-    echo "Download Docker Desktop:"
-    echo "  https://www.docker.com/products/docker-desktop"
+    echo "Install Homebrew:"
+    echo "  /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
     echo ""
     exit 1
 fi
 
-echo "✓ Docker found"
+echo "✓ Homebrew found"
 
-# Check if Docker is running
-if ! docker info > /dev/null 2>&1; then
-    echo "⚠️  Docker is not running. Starting Docker Desktop..."
-    open -a Docker
-    echo "⏳ Waiting for Docker to start..."
-    for i in {1..30}; do
-        if docker info > /dev/null 2>&1; then
-            echo "✓ Docker is ready"
-            break
-        fi
-        sleep 2
-    done
+# Add PostgreSQL to PATH if installed
+if [ -f "/opt/homebrew/opt/postgresql@14/bin/psql" ]; then
+    export PATH="/opt/homebrew/opt/postgresql@14/bin:$PATH"
+fi
+
+# Check if PostgreSQL is installed
+if ! command -v psql &> /dev/null; then
+    echo "📦 Installing PostgreSQL 14..."
+    brew install postgresql@14
+    
+    echo "🚀 Starting PostgreSQL service..."
+    brew services start postgresql@14
+    
+    sleep 3
+    
+    export PATH="/opt/homebrew/opt/postgresql@14/bin:$PATH"
+else
+    echo "✓ PostgreSQL found"
+    
+    # Make sure it's running
+    if ! pg_isready > /dev/null 2>&1; then
+        echo "🚀 Starting PostgreSQL service..."
+        brew services start postgresql@14
+        sleep 3
+    fi
+fi
+
+# Create database if it doesn't exist
+if ! psql -lqt | cut -d \| -f 1 | grep -qw cheatsheeter; then
+    echo "📝 Creating database 'cheatsheeter'..."
+    createdb cheatsheeter
+    
+    echo "📋 Loading database schema..."
+    psql -d cheatsheeter -f server/src/db/schema.sql
+    
+    echo "✅ Database created!"
+else
+    echo "✓ Database 'cheatsheeter' already exists"
 fi
 
 # Install dependencies
@@ -64,10 +90,8 @@ echo ""
 echo "✅ Setup complete!"
 echo ""
 echo "To start the application:"
-echo "  npm start              (Local development mode - recommended)"
-echo "  npm run start:docker   (Full Docker mode)"
+echo "  npm start"
 echo ""
 echo "Access the application at:"
-echo "  http://localhost:5173  (Local mode)"
-echo "  http://localhost:3000  (Docker mode)"
+echo "  http://localhost:5173"
 echo ""
