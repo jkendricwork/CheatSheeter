@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.cheatsheeter.startup</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/u0099449/Dev/CheatSheeter/start-docker.sh</string>
+    </array>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/u0099449/Dev/CheatSheeter</string>
+
+    <key>StandardOutPath</key>
+    <string>/Users/u0099449/Dev/CheatSheeter/logs/startup.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/u0099449/Dev/CheatSheeter/logs/startup-error.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+
+    <!-- Wait for Docker to be ready before starting -->
+    <key>StartInterval</key>
+    <integer>60</integer>
+
+    <key>KeepAlive</key>
+    <false/>
+</dict>
+</plist>

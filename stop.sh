@@ -14,9 +14,9 @@ echo "🔪 Killing frontend server (ports 5173-5174)..."
 lsof -ti:5173 | xargs kill -9 2>/dev/null || echo "   No process running on port 5173"
 lsof -ti:5174 | xargs kill -9 2>/dev/null || echo "   No process running on port 5174"
 
-# Stop Docker containers
+# Stop only the PostgreSQL container (keep network)
 echo "🐳 Stopping PostgreSQL database..."
-docker-compose down
+docker-compose stop database
 
 echo ""
 echo "✅ All CheatSheeter processes stopped!"

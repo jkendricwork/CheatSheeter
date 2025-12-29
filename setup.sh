@@ -4,27 +4,33 @@ echo "🚀 CheatSheeter Setup Script"
 echo ""
 
 # Check if Docker is available
-if command -v docker &> /dev/null; then
-    echo "✓ Docker found"
-    echo "📦 Starting PostgreSQL container..."
-    docker-compose up -d
-
-    echo "⏳ Waiting for PostgreSQL to be ready..."
-    sleep 5
-
-    echo "✓ PostgreSQL is running"
+if ! command -v docker &> /dev/null; then
+    echo "⚠️  Docker not found. Please install Docker Desktop."
     echo ""
-else
-    echo "⚠️  Docker not found. Please install PostgreSQL manually or install Docker."
-    echo ""
-    echo "To install PostgreSQL with Homebrew:"
-    echo "  brew install postgresql@14"
-    echo "  brew services start postgresql@14"
+    echo "Download Docker Desktop:"
+    echo "  https://www.docker.com/products/docker-desktop"
     echo ""
     exit 1
 fi
 
+echo "✓ Docker found"
+
+# Check if Docker is running
+if ! docker info > /dev/null 2>&1; then
+    echo "⚠️  Docker is not running. Starting Docker Desktop..."
+    open -a Docker
+    echo "⏳ Waiting for Docker to start..."
+    for i in {1..30}; do
+        if docker info > /dev/null 2>&1; then
+            echo "✓ Docker is ready"
+            break
+        fi
+        sleep 2
+    done
+fi
+
 # Install dependencies
+echo ""
 echo "📦 Installing dependencies..."
 echo ""
 
@@ -39,23 +45,29 @@ echo "Installing client dependencies..."
 cd client && npm install
 cd ..
 
-echo "Installing scripts dependencies..."
-cd scripts && npm install
-cd ..
-
 echo ""
 echo "✓ Dependencies installed"
 echo ""
 
-# Run migration
-echo "🔄 Running migration from index.html..."
-npm run migrate
+# Copy example env files if they don't exist
+if [ ! -f client/.env ]; then
+    echo "📝 Creating client/.env from example..."
+    cp client/.env.example client/.env
+fi
+
+if [ ! -f server/.env ]; then
+    echo "📝 Creating server/.env from example..."
+    cp server/.env.example server/.env
+fi
 
 echo ""
 echo "✅ Setup complete!"
 echo ""
-echo "To start the development servers:"
-echo "  npm run dev"
+echo "To start the application:"
+echo "  npm start              (Local development mode - recommended)"
+echo "  npm run start:docker   (Full Docker mode)"
 echo ""
-echo "Then open http://localhost:5173 in your browser"
+echo "Access the application at:"
+echo "  http://localhost:5173  (Local mode)"
+echo "  http://localhost:3000  (Docker mode)"
 echo ""

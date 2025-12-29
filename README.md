@@ -18,190 +18,151 @@ A full-stack web application for creating, editing, and managing custom cheat sh
 - **PostgreSQL**: Relational database with full-text search
 - **express-validator**: Request validation
 - **pg**: PostgreSQL driver
-- **cors**: Cross-origin resource sharing
-- **helmet**: Security headers
-
-## Project Structure
-
-```
-CheatSheeter/
-├── client/                 # React frontend
-├── server/                 # Express backend
-├── scripts/                # Migration and utility scripts
-├── index.html             # Original static HTML (for reference)
-└── README.md
-```
 
 ## Prerequisites
 
-- **Option 1 (Docker - Recommended)**: Docker and Docker Compose
-- **Option 2 (Local Development)**: Node.js 18+ and npm
+- **Docker Desktop** (for running PostgreSQL database)
+- **Node.js 18+** and npm
 - Git
 
-## Quick Start with Docker (Recommended)
-
-**📖 See [DOCKER.md](DOCKER.md) for complete Docker documentation and commands.**
-
-### Run the Entire Application in Docker
-
-```bash
-# Build and start all services (database, backend, frontend)
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop all services
-docker-compose down
-```
-
-The application will be available at:
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:3001
-- **Database**: localhost:5432
-
-**Note**: The frontend runs on port 3000 (via nginx) in Docker, vs port 5173 (Vite dev server) in local development.
-
-### Docker Commands
-
-```bash
-# Rebuild containers after code changes
-docker-compose up -d --build
-
-# Stop and remove all containers, networks, and volumes
-docker-compose down -v
-
-# View logs for a specific service
-docker-compose logs -f frontend
-docker-compose logs -f backend
-docker-compose logs -f postgres
-
-# Access a running container
-docker exec -it cheatsheeter-backend sh
-docker exec -it cheatsheeter-frontend sh
-docker exec -it cheatsheeter-db psql -U postgres -d cheatsheeter
-
-# Run database migrations (if using scripts)
-docker exec -it cheatsheeter-db psql -U postgres -d cheatsheeter -f /docker-entrypoint-initdb.d/schema.sql
-```
-
-### Notes on Docker Setup
-
-- The database schema is automatically initialized on first run
-- All data is persisted in a Docker volume named `postgres_data`
-- The frontend is built as a static site and served by nginx
-- The backend runs in production mode inside the container
-- All services are connected via a Docker network for inter-service communication
-
-## Quick Start for Local Development
+## Quick Start
 
 ### 1. Install Dependencies
 
 ```bash
-# Install all dependencies (root, server, client, scripts)
 npm install
 cd server && npm install && cd ..
 cd client && npm install && cd ..
-cd scripts && npm install && cd ..
 ```
 
-### 2. Start Database with Docker
+### 2. Start the Application
+
+#### Local Development Mode (Recommended)
+Runs PostgreSQL in Docker, frontend and backend on your local machine with hot reload:
 
 ```bash
-# Start PostgreSQL in Docker (recommended)
-npm run dev:db
-
-# The database schema will be automatically created
-```
-
-### 3. Configure Environment Variables
-
-Create `server/.env`:
-
-```bash
-PORT=3001
-DATABASE_URL=postgresql://postgres:password@localhost:5432/cheatsheeter
-CORS_ORIGIN=http://localhost:5173
-NODE_ENV=development
-```
-
-### 4. Migrate Initial Data
-
-```bash
-# Import data from the original index.html
-npm run migrate
-```
-
-### 5. Start the Application
-
-```bash
-# Start everything (database + backend + frontend)
 npm start
-
-# This will:
-# 1. Start PostgreSQL in Docker
-# 2. Wait for database to be ready
-# 3. Start backend server on port 3001
-# 4. Start frontend dev server on port 5173
 ```
 
-The application will be available at:
+This will:
+1. Start PostgreSQL in Docker
+2. Wait for database to be ready
+3. Start backend server on port 3001
+4. Start frontend dev server on port 5173
+
+**Access at:**
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:3001
-- API Health Check: http://localhost:3001/health
+- API Health: http://localhost:3001/health
 
-### 6. Stop the Application
+#### Full Docker Mode
+Runs everything in Docker containers (all services containerized):
 
 ```bash
-# Stop all servers and database
+npm run start:docker
+```
+
+**Access at:**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:3001
+
+### 3. Stop the Application
+
+```bash
+# For local development mode
 npm stop
 
-# This will:
-# 1. Kill backend server process
-# 2. Kill frontend dev server process
-# 3. Stop PostgreSQL Docker container
+# For full Docker mode
+npm run stop:docker
 ```
 
-### Alternative: Manual Database Setup
+## Auto-Start on Boot (macOS)
 
-If you prefer to install PostgreSQL locally instead of using Docker:
+To automatically start CheatSheeter when your Mac boots:
 
 ```bash
-# Create PostgreSQL database
-createdb cheatsheeter
-
-# Run database schema
-psql -d cheatsheeter -f server/src/db/schema.sql
-
-# Update server/.env with your local connection
-DATABASE_URL=postgresql://localhost:5432/cheatsheeter
+./auto-start.sh enable
 ```
 
-## Available Scripts
+This will start the application in full Docker mode every time you log in.
 
-From the root directory:
+**📖 See [AUTO_START.md](AUTO_START.md) for complete auto-start documentation.**
 
-**Main Commands:**
-- `npm start` - Start everything (database + backend + frontend)
-- `npm stop` - Stop all servers and database
-- `npm run migrate` - Import data from index.html into the database
+To disable auto-start:
 
-**Development Commands:**
+```bash
+./auto-start.sh disable
+```
+
+## LAN Access (Access from Other Devices)
+
+To access CheatSheeter from other devices on your local network:
+
+### Local Development Mode
+
+1. Find your machine's IP address:
+   ```bash
+   # macOS/Linux
+   ipconfig getifaddr en0
+   # or use: ifconfig
+   ```
+
+2. Update `client/.env`:
+   ```bash
+   VITE_API_URL=http://YOUR_IP:3001
+   # Example: VITE_API_URL=http://192.168.1.70:3001
+   ```
+
+3. Update `server/.env`:
+   ```bash
+   CORS_ORIGIN=http://localhost:5173,http://YOUR_IP:5173
+   # Example: CORS_ORIGIN=http://localhost:5173,http://192.168.1.70:5173
+   ```
+
+4. Restart the application:
+   ```bash
+   npm stop
+   npm start
+   ```
+
+5. Access from other devices at: `http://YOUR_IP:5173`
+
+### Full Docker Mode
+
+1. Update `docker-compose.yml` line 52:
+   ```yaml
+   VITE_API_URL: "http://YOUR_IP:3001"
+   ```
+
+2. Rebuild and restart:
+   ```bash
+   npm run stop:docker
+   npm run start:docker
+   ```
+
+3. Access from other devices at: `http://YOUR_IP:3000`
+
+## Available Commands
+
+### Main Commands
+- `npm start` - Start in local development mode (database in Docker, servers local)
+- `npm stop` - Stop local development mode
+- `npm run start:docker` - Start everything in Docker
+- `npm run stop:docker` - Stop Docker mode
+
+### Development Commands
 - `npm run dev` - Start frontend and backend (assumes database is running)
-- `npm run dev:all` - Start database + frontend + backend
 - `npm run dev:client` - Start only the frontend
 - `npm run dev:server` - Start only the backend
 - `npm run dev:db` - Start only PostgreSQL in Docker
 
-**Build Commands:**
+### Utility Commands
+- `npm run docker:logs` - View Docker logs
 - `npm run build` - Build both frontend and backend for production
-- `npm run build:client` - Build only the frontend
-- `npm run build:server` - Build only the backend
-
-**Utility Commands:**
-- `npm run stop:db` - Stop only the Docker database
-- `./start.sh` - Direct shell script to start everything
-- `./stop.sh` - Direct shell script to stop everything
+- `./start.sh` - Direct shell script for local development mode
+- `./stop.sh` - Direct shell script to stop local development mode
+- `./start-docker.sh` - Direct shell script for full Docker mode
+- `./stop-docker.sh` - Direct shell script to stop Docker mode
 
 ## API Endpoints
 
@@ -228,61 +189,6 @@ From the root directory:
 ### Search
 - `GET /api/search?q=<query>` - Full-text search
 
-## Development Status
-
-### ✅ Completed
-- [x] Monorepo structure
-- [x] Express + TypeScript backend
-- [x] PostgreSQL database schema with 3-level hierarchy (sections → subsections → code blocks)
-- [x] Backend API endpoints (CRUD for sections, subsections, and code blocks)
-- [x] Search functionality (backend)
-- [x] HTML migration script
-- [x] Docker Compose setup for PostgreSQL
-- [x] Vite + React + TypeScript frontend setup
-- [x] TailwindCSS configuration
-- [x] React components (layout, sections, code blocks)
-- [x] Frontend API client
-- [x] State management (Zustand + React Query)
-- [x] Click-to-copy functionality with visual feedback
-- [x] Edit mode with CRUD forms
-- [x] Full-width responsive layout with multi-column subsections
-- [x] Modal and form components for all entities
-
-### 📋 Next Steps
-
-1. **Search Implementation** (Priority: High)
-   - SearchBar component with debouncing
-   - SearchResults page
-   - Keyboard shortcuts (Cmd+K for search, E for edit mode)
-
-2. **Drag-and-Drop Reordering**
-   - Install @dnd-kit/core
-   - Add drag handles to sections, subsections, and code blocks
-   - Wire up reorder API endpoints
-
-3. **Testing & Polish**
-   - Test all CRUD operations thoroughly
-   - Verify responsive design at different widths
-   - Test data persistence
-   - Add loading states and error handling
-   - Add toast notifications for operations
-
-4. **Deployment**
-   - Deploy backend to Railway or similar
-   - Deploy frontend to Vercel
-   - Configure production environment variables
-   - Set up production database
-
-## Key Features
-
-- **Dynamic Content Management**: Create, edit, and delete sections and code blocks
-- **Half-Screen Layout**: Optimized for 50% screen width (960px) for side-by-side use with coding tools
-- **Full-Text Search**: PostgreSQL-powered search across all content
-- **Click-to-Copy**: One-click copy functionality with visual feedback
-- **Responsive Design**: Works on desktop, tablet, and mobile
-- **Syntax Highlighting**: Code blocks with proper syntax highlighting
-- **Navigation Menu**: Categorized sidebar for easy section navigation
-
 ## Database Schema
 
 The application uses a 3-level hierarchy:
@@ -304,27 +210,73 @@ The application uses a 3-level hierarchy:
 - Foreign key: subsection_id (CASCADE on delete)
 - Example: `git init`, `git clone <url>`
 
-## UI Design
+## Key Features
 
-The application features a half-screen optimized layout:
-- 200px fixed sidebar with navigation
-- 2-column grid for sections at 960px width
-- Full-width sections for "Best Practices" type content
-- View mode: Clean, readable interface
-- Edit mode: Shows edit/delete controls and drag handles
+- **Dynamic Content Management**: Create, edit, and delete sections and code blocks
+- **Half-Screen Layout**: Optimized for 50% screen width (960px) for side-by-side use with coding tools
+- **Full-Text Search**: PostgreSQL-powered search across all content
+- **Click-to-Copy**: One-click copy functionality with visual feedback
+- **Responsive Design**: Works on desktop, tablet, and mobile
+- **Syntax Highlighting**: Code blocks with proper syntax highlighting
+- **Navigation Menu**: Categorized sidebar for easy section navigation
+- **LAN Access**: Access from any device on your local network
 
-## Migration from Static HTML
+## Docker Details
 
-The original static [index.html](index.html) file has been preserved. Run `npm run migrate` to import its content into the database. The migration script:
-- Parses HTML structure using Cheerio
-- Extracts sections, titles, and code blocks
-- Preserves styling (colors, variants)
-- Categorizes sections automatically
-- Seeds the PostgreSQL database
+### Container Names
+- `cheatsheeter-postgres` - PostgreSQL database
+- `cheatsheeter-backend` - Express API server
+- `cheatsheeter-frontend` - Nginx serving React app
 
-## Contributing
+### Data Persistence
+All database data is persisted in a Docker volume named `postgres_data`. Data survives container restarts unless you explicitly run:
+```bash
+docker-compose down -v  # WARNING: Deletes all data!
+```
 
-This is a single-user application, but improvements are welcome!
+### Port Mappings
+- **Local Development Mode**: Frontend on 5173, Backend on 3001, Database on 5432
+- **Full Docker Mode**: Frontend on 3000, Backend on 3001, Database on 5432
+
+## Troubleshooting
+
+### Port Already in Use
+If you get "port already in use" errors:
+```bash
+# Kill processes on specific ports
+lsof -ti:3001 | xargs kill -9  # Backend
+lsof -ti:5173 | xargs kill -9  # Frontend
+lsof -ti:5432 | xargs kill -9  # Database
+```
+
+### Docker Issues
+```bash
+# Check if Docker is running
+docker info
+
+# Start Docker Desktop on macOS
+open -a Docker
+
+# View container logs
+docker-compose logs -f
+
+# Clean up everything and start fresh
+npm run stop:docker
+docker-compose down -v
+npm run start:docker
+```
+
+### Database Connection Errors
+Make sure PostgreSQL is running:
+```bash
+docker ps | grep postgres
+```
+
+### Frontend Can't Connect to Backend
+1. Check that backend is running: `curl http://localhost:3001/health`
+2. Verify CORS configuration in `server/.env`
+3. Check `client/.env` has correct `VITE_API_URL`
+4. Restart servers after changing `.env` files
 
 ## License
 

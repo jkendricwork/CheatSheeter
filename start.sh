@@ -14,19 +14,16 @@ if ! docker info > /dev/null 2>&1; then
     exit 1
 fi
 
-# Start PostgreSQL in Docker
+# Start only PostgreSQL in Docker (not the full stack)
 echo "📦 Starting PostgreSQL database..."
-docker-compose up -d
+docker-compose up -d database
 
 # Wait for database to be ready
 echo "⏳ Waiting for database to be ready..."
 sleep 3
 
-# Get the actual container name
-CONTAINER_NAME=$(docker ps --format "{{.Names}}" | grep -i cheat | head -n 1)
-
-# Check if database is accessible
-until docker exec "$CONTAINER_NAME" pg_isready -U postgres > /dev/null 2>&1; do
+# Check if database is accessible (using the known container name)
+until docker exec cheatsheeter-postgres pg_isready -U postgres > /dev/null 2>&1; do
     echo "   Database is not ready yet, waiting..."
     sleep 1
 done

@@ -1,8 +1,8 @@
 services:
   # PostgreSQL Database
-  postgres:
+  database:
     image: postgres:14-alpine
-    container_name: cheatsheeter-db
+    container_name: cheatsheeter-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -19,6 +19,7 @@ services:
       retries: 5
     networks:
       - cheatsheeter-network
+    stop_grace_period: 10s
 
   # Backend API Server
   backend:
@@ -28,17 +29,19 @@ services:
     container_name: cheatsheeter-backend
     environment:
       PORT: 3001
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/cheatsheeter
-      CORS_ORIGIN: http://localhost:3000
+      DATABASE_URL: postgresql://postgres:postgres@database:5432/cheatsheeter
+      # Allow all origins in Docker since nginx proxies the requests
+      CORS_ORIGIN: "*"
       NODE_ENV: production
     ports:
       - "3001:3001"
     depends_on:
-      postgres:
+      database:
         condition: service_healthy
     networks:
       - cheatsheeter-network
     restart: unless-stopped
+    stop_grace_period: 10s
 
   # Frontend Client
   frontend:
@@ -46,7 +49,9 @@ services:
       context: ./client
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: http://localhost:3001
+        # For LAN access, use the server's IP address
+        # For localhost only, use http://localhost:3001
+        VITE_API_URL: "http://192.168.1.70:3001"
     container_name: cheatsheeter-frontend
     ports:
       - "3000:80"
@@ -55,6 +60,7 @@ services:
     networks:
       - cheatsheeter-network
     restart: unless-stopped
+    stop_grace_period: 5s
 
 volumes:
   postgres_data:
